@@ -77,8 +77,8 @@ function KewExtendDataPreviewDialog(column, columnIndex, rowIndices, onDone) {
 }
 
 KewExtendDataPreviewDialog.getKewMqlUrl = function() {
-    return "http://a9487.ad.kew.org:8081/tpl";
-}
+    return "http://www.theplantlist.org/tpl1.1/mql";
+};
 
 KewExtendDataPreviewDialog.getAllProperties = function(typeID, onDone) {
     var done = false;
