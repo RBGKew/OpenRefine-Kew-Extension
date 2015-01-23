@@ -60,12 +60,12 @@
 
 	<target name="build_java" depends="copyfiles">
 		<mkdir dir="${classes.dir}" />
-			<copy todir="${classes.dir}">
-				<fileset dir="${freebase.classes.dir}">
-					<include name="**/*"/>
-				</fileset>
-			</copy>
-		<javac destdir="${classes.dir}" debug="true" includeAntRuntime="no">
+		<copy todir="${classes.dir}">
+			<fileset dir="${freebase.classes.dir}">
+				<include name="**/*"/>
+			</fileset>
+		</copy>
+		<javac source="${java_version}" target="${java_version}" encoding="utf-8" destdir="${classes.dir}" debug="true" includeAntRuntime="no">
 			<src path="${src.dir}"/>
 			<!--src path="${rsrc.dir}"/-->
 			<classpath refid="class.path" />
