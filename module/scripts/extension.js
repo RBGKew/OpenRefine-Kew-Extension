@@ -6,14 +6,14 @@ DataTableColumnHeaderUI.extendMenu(function(column, columnHeaderUI, menu) {
             column, 
             columnIndex, 
             o.rowIndices, 
-            function(extension) {
+            function(extension, url) {
                 Refine.postProcess(
                     "kew-extension",
                     "extend-data", 
                     {
                         baseColumnName: column.name,
                         columnInsertIndex: columnIndex + 1,
-                        kewMqlUrl: KewExtendDataPreviewDialog.getKewMqlUrl()
+                        kewMqlUrl: url
                     },
                     {
                         extension: JSON.stringify(extension)
@@ -29,7 +29,7 @@ DataTableColumnHeaderUI.extendMenu(function(column, columnHeaderUI, menu) {
         [ "core/edit-column", "core/add-column-by-fetching-urls" ],
         {
             id: "kew/add-columns-from-kew",
-            label: "Add columns from TPL ...",
+            label: "Add columns using MQL ...",
             click: doAddColumnFromKew
         }
     );

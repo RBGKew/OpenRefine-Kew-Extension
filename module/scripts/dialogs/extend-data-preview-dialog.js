@@ -32,23 +32,39 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 function KewExtendDataPreviewDialog(column, columnIndex, rowIndices, onDone) {
+    this._serviceRecords = [];
+    this._selectedServiceRecordIndex = -1;
     this._column = column;
     this._columnIndex = columnIndex;
     this._rowIndices = rowIndices;
     this._onDone = onDone;
     this._extension = { properties: [] };
 
+    this._createDialog();
+}
+
+KewExtendDataPreviewDialog.prototype._createDialog = function() {
     var self = this;
     this._dialog = $(DOM.loadHTML("kew-extension", "scripts/dialogs/extend-data-preview-dialog.html"));
     this._elmts = DOM.bind(this._dialog);
 
-    this._elmts.dialogHeader.text("Add Columns from Kew Based on Column " + column.name);
+    // TODO: I18N: this._elmts.dialogHeader.text($.i18n._('core-recon')["recon-col"]+' "' + this._column.name + '"');
+    this._elmts.dialogHeader.text("Add Columns from Kew Based on Column " + this._column.name);
+
+    // Choosing service
+    this._elmts.servicePanelMessage.html("X Pick a service"); // $.i18n._('core-recon')["pick-service"]);
+    this._elmts.serviceListTitle.html("X Services"); // $.i18n._('core-recon')["service-title"]);
+    this._elmts.addServiceButton.html("X Add service"); // $.i18n._('core-buttons')["add-std-svc"]+"...");
+
+    
     this._elmts.fb_add_property.html($.i18n._('fb-extend')["add-property"]);
     this._elmts.suggested_properties.text($.i18n._('fb-extend')["suggested-properties"]);
     
     this._elmts.resetButton.text($.i18n._('fb-buttons')["reset"]);
     this._elmts.okButton.html('&nbsp;&nbsp;'+$.i18n._('fb-buttons')["ok"]+'&nbsp;&nbsp;');
     this._elmts.cancelButton.text($.i18n._('fb-buttons')["cancel"]);
+
+    this._elmts.addServiceButton.click(function() { self._onAddService(); });
 
     this._elmts.resetButton.click(function() {
         self._extension.properties = [];
@@ -60,31 +76,120 @@ function KewExtendDataPreviewDialog(column, columnIndex, rowIndices, onDone) {
             alert($.i18n._('fb-extend')["warning-add-properties"]);
         } else {
             DialogSystem.dismissUntil(self._level - 1);
-            self._onDone(self._extension);
+        	var url = self._serviceRecords[self._selectedServiceRecordIndex].service.url;
+            self._onDone(self._extension, url);
         }
     });
     this._elmts.cancelButton.click(function() {
         DialogSystem.dismissUntil(self._level - 1);
     });
     
-    var dismissBusy = DialogSystem.showBusy();
-    var type = (column.reconConfig) && (column.reconConfig.type) ? column.reconConfig.type.id : "/common/topic";
-    
-    KewExtendDataPreviewDialog.getAllProperties(type, function(properties) {
-        dismissBusy();
-        self._show(properties);
-    });
-}
+    this._level = DialogSystem.showDialog(this._dialog);
 
-KewExtendDataPreviewDialog.getKewMqlUrl = function() {
-    return "http://www.theplantlist.org/tpl1.1/mql";
+	this._populateDialog();
 };
 
-KewExtendDataPreviewDialog.getAllProperties = function(typeID, onDone) {
+KewExtendDataPreviewDialog.prototype._populateDialog = function() {
+	var self = this;
+
+	var services = [
+	                { name: "X The Plant List", url:  "http://www.theplantlist.org/tpl1.1/mql", ui: { handler: "ReconStandardServicePanel" } },
+	                { name: "X IPNI", url:  "http://a9487.ad.kew.org:8080/mql", ui: { handler: "ReconStandardServicePanel" } }
+	                ]; // ReconciliationManager.getAllServices();
+	if (services.length > 0) {
+		var renderService = function(service) {
+			var record = {
+					service: service,
+					handler: null
+			};
+
+			record.selector = $('<a>')
+			.attr("href", "javascript:{}")
+			.addClass("recon-dialog-service-selector")
+			.text(service.name)
+			.appendTo(self._elmts.serviceList)
+			.click(function() {
+				//self._toggleServices();
+				self._selectService(record);
+			});
+
+			$('<a>')
+			.html("&nbsp;")
+			.addClass("recon-dialog-service-selector-remove")
+			.prependTo(record.selector)
+			.click(function() {
+				ReconciliationManager.unregisterService(service, function() {
+					self._refresh(-1);
+				});
+			});
+
+			self._serviceRecords.push(record);
+		};
+
+		for (var i = 0; i < services.length; i++) {
+			renderService(services[i]);
+		}
+
+
+		$('.recon-dialog-service-opener').click(function() {
+			self._toggleServices();
+		});
+	}
+};
+
+KewExtendDataPreviewDialog.prototype._selectService = function(record) {
+	var self = this;
+
+	for (var i = 0; i < this._serviceRecords.length; i++) {
+		if (record === this._serviceRecords[i]) {
+			if (i !== this._selectedServiceRecordIndex) {
+				if (this._selectedServiceRecordIndex >= 0) {
+					var oldRecord = this._serviceRecords[this._selectedServiceRecordIndex];
+					if (oldRecord.handler) {
+						oldRecord.selector.removeClass("selected");
+						oldRecord.handler.deactivate();
+					}
+				}
+
+				//this._elmts.servicePanelMessage.hide();
+
+				record.selector.addClass("selected");
+				//if (record.handler) {
+				//	record.handler.activate();
+				//}
+				//else {
+				//	var handlerConstructor = eval(record.service.ui.handler);
+
+				//	record.handler = new handlerConstructor(
+				//			this._column, record.service, this._elmts.servicePanelContainer);
+				//}
+
+				var dismissBusy = DialogSystem.showBusy();
+				var type = (this._column.reconConfig) && (this._column.reconConfig.type) ? this._column.reconConfig.type.id : "/common/topic";
+
+				// This should happen only after a service is chosen
+				KewExtendDataPreviewDialog.getAllProperties(record.service, type, function(properties) {
+					dismissBusy();
+					self._show(properties);
+				});
+
+
+				this._selectedServiceRecordIndex = i;
+				return;
+			}
+		}
+	}
+};
+
+//KewExtendDataPreviewDialog.getKewMqlUrl = function() {
+//    return "http://www.theplantlist.org/tpl1.1/mql";
+//};
+
+KewExtendDataPreviewDialog.getAllProperties = function(service, typeID, onDone) {
     var done = false;
     
     $.getJSON(
-        KewExtendDataPreviewDialog.getKewMqlUrl() + "/properties?type=" + typeID + "&callback=?",
+        service.url + "/properties?type=" + typeID + "&callback=?",
         null,
         function(data) {
             if (done) return;
@@ -124,7 +229,6 @@ KewExtendDataPreviewDialog.getAllProperties = function(typeID, onDone) {
 };
 
 KewExtendDataPreviewDialog.prototype._show = function(properties) {
-    this._level = DialogSystem.showDialog(this._dialog);
     
     var n = this._elmts.suggestedPropertyContainer.offset().top +
         this._elmts.suggestedPropertyContainer.outerHeight(true) -
@@ -133,7 +237,8 @@ KewExtendDataPreviewDialog.prototype._show = function(properties) {
     this._elmts.previewContainer.height(Math.floor(n));
     
     var self = this;
-    var container = this._elmts.suggestedPropertyContainer;
+    var container = this._elmts.suggestedPropertyContainer.empty();
+    //container.empty();
     var renderSuggestedProperty = function(property) {
         var label = ("properties" in property) ? (property.name + " &raquo; " + property.properties[0].name) : property.name;
         var div = $('<div>').addClass("suggested-property").appendTo(container);
@@ -175,11 +280,15 @@ KewExtendDataPreviewDialog.prototype._show = function(properties) {
 KewExtendDataPreviewDialog.prototype._update = function() {
 	this._elmts.previewContainer.empty().text("Querying Kew ...");
     
+	console.log(this._serviceRecords[this._selectedServiceRecordIndex]);
+	
+	var url = this._serviceRecords[this._selectedServiceRecordIndex].service.url;
+	
     var self = this;
     var params = {
        project: theProject.id,
        columnName: this._column.name,
-       kewMqlUrl: KewExtendDataPreviewDialog.getKewMqlUrl()
+       kewMqlUrl: url
     };
    
     $.post(
@@ -237,6 +346,8 @@ KewExtendDataPreviewDialog.prototype._renderPreview = function(data) {
         container.text("Error.");
         return;
     }
+    
+    console.log("adding column "+this._column.name);
     
     var table = $('<table>')[0];
     var trHead = table.insertRow(table.rows.length);

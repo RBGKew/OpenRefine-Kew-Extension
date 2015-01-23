@@ -102,7 +102,7 @@ public class KewDataExtensionJob extends FreebaseDataExtensionJob {
         
         URL url = new URL(kewMqlUrl + "/read");
 
-        System.out.println("Kew MQL url: " + url.getPath());
+        System.out.println("Kew MQL url: " + url.toString());
         System.out.println("Kew MQL query: " + query);
 
         URLConnection connection = url.openConnection();
@@ -123,6 +123,7 @@ public class KewDataExtensionJob extends FreebaseDataExtensionJob {
         connection.connect();
         
         String s = ParsingUtilities.inputStreamToString(connection.getInputStream());
+        System.out.println("Kew MQL response: " + s);
         connection.getInputStream().close();
         return s;
     }
