@@ -106,7 +106,7 @@ public class KewDataExtensionJob extends FreebaseDataExtensionJob {
         System.out.println("Kew MQL query: " + query);
 
         URLConnection connection = url.openConnection();
-        connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
         connection.setConnectTimeout(5000);
         connection.setDoOutput(true);
         
