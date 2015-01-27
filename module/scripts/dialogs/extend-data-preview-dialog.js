@@ -217,8 +217,6 @@ KewExtendDataPreviewDialog.prototype._onAddService = function() {
 KewExtendDataPreviewDialog.prototype._selectService = function(record) {
 	var self = this;
 
-	console.log(record + " selected");
-	
 	for (var i = 0; i < this._serviceRecords.length; i++) {
 		if (record === this._serviceRecords[i]) {
 			if (i !== this._selectedServiceRecordIndex) {
@@ -356,8 +354,6 @@ KewExtendDataPreviewDialog.prototype._show = function(properties) {
 KewExtendDataPreviewDialog.prototype._update = function() {
 	this._elmts.previewContainer.empty().text($.i18n._('kew-mql')["querying"]);
     
-	console.log(this._serviceRecords[this._selectedServiceRecordIndex]);
-	
 	var url = this._serviceRecords[this._selectedServiceRecordIndex].service.url;
 	
     var self = this;
@@ -422,8 +418,6 @@ KewExtendDataPreviewDialog.prototype._renderPreview = function(data) {
         container.text("Error.");
         return;
     }
-    
-    console.log("adding column "+this._column.name);
     
     var table = $('<table>')[0];
     var trHead = table.insertRow(table.rows.length);
