@@ -56,8 +56,7 @@ KewExtendDataPreviewDialog.prototype._createDialog = function() {
     this._elmts.serviceListTitle.html("X Services"); // $.i18n._('core-recon')["service-title"]);
     this._elmts.addServiceButton.html("X Add service"); // $.i18n._('core-buttons')["add-std-svc"]+"...");
 
-    
-    this._elmts.fb_add_property.html($.i18n._('fb-extend')["add-property"]);
+    //this._elmts.fb_add_property.html($.i18n._('fb-extend')["add-property"]);
     this._elmts.suggested_properties.text($.i18n._('fb-extend')["suggested-properties"]);
     
     this._elmts.resetButton.text($.i18n._('fb-buttons')["reset"]);
@@ -308,11 +307,11 @@ KewExtendDataPreviewDialog.getAllProperties = function(service, typeID, onDone) 
 
 KewExtendDataPreviewDialog.prototype._show = function(properties) {
     
-    var n = this._elmts.suggestedPropertyContainer.offset().top +
-        this._elmts.suggestedPropertyContainer.outerHeight(true) -
-        this._elmts.addPropertyInput.offset().top;
-        
-    this._elmts.previewContainer.height(Math.floor(n));
+    //var n = this._elmts.suggestedPropertyContainer.offset().top +
+    //    this._elmts.suggestedPropertyContainer.outerHeight(true) -
+    //    this._elmts.addPropertyInput.offset().top;
+    //
+    //this._elmts.previewContainer.height(Math.floor(n));
     
     var self = this;
     var container = this._elmts.suggestedPropertyContainer.empty();
@@ -332,26 +331,27 @@ KewExtendDataPreviewDialog.prototype._show = function(properties) {
         renderSuggestedProperty(properties[i]);
     }
     
-    var suggestConfig = {
-        type: '/type/property', // NOTE: requires patched Suggest to pass this through
-        // Default returns id, lang, mid, name, notable {id,name}, score
-        mql_output : JSON.stringify({'name':null,'id':null,'mid':null, '/type/property/expected_type':{'name':null,'id':null}}),
-    };
-    if ((this._column.reconConfig) && (this._column.reconConfig.type)) {
-        suggestConfig.filter = '(should (any namespace:/type/object namespace:/common/topic namespace:' + this._column.reconConfig.type.id + '))';
-    }
-    
-    this._elmts.addPropertyInput.suggestP(suggestConfig).bind("fb-select", function(evt, data) {
-        var expected = data.expected_type;
-        self._addProperty({
-            id : data.id,
-            name: data.name,
-            expected: {
-                id: expected.id,
-                name: expected.name
-            }
-        });
-    });
+    //var suggestConfig = {
+    //    type: '/type/property', // NOTE: requires patched Suggest to pass this through
+    //    // Default returns id, lang, mid, name, notable {id,name}, score
+    //    mql_output : JSON.stringify({'name':null,'id':null,'mid':null, '/type/property/expected_type':{'name':null,'id':null}}),
+    //};
+    //if ((this._column.reconConfig) && (this._column.reconConfig.type)) {
+    //    suggestConfig.filter = '(should (any namespace:/type/object namespace:/common/topic namespace:' + this._column.reconConfig.type.id + '))';
+    //}
+    //
+    // Hide and disable Add Property box.
+    //this._elmts.addPropertyInput.suggestP(suggestConfig).bind("fb-select", function(evt, data) {
+    //    var expected = data.expected_type;
+    //    self._addProperty({
+    //        id : data.id,
+    //        name: data.name,
+    //        expected: {
+    //            id: expected.id,
+    //            name: expected.name
+    //        }
+    //    });
+    //});
 };
 
 KewExtendDataPreviewDialog.prototype._update = function() {
