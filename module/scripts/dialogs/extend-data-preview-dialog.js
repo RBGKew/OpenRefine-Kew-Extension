@@ -48,13 +48,12 @@ KewExtendDataPreviewDialog.prototype._createDialog = function() {
     this._dialog = $(DOM.loadHTML("kew-extension", "scripts/dialogs/extend-data-preview-dialog.html"));
     this._elmts = DOM.bind(this._dialog);
 
-    // TODO: I18N: this._elmts.dialogHeader.text($.i18n._('core-recon')["recon-col"]+' "' + this._column.name + '"');
-    this._elmts.dialogHeader.text("Add Columns from Kew Based on Column " + this._column.name);
+    this._elmts.dialogHeader.text($.i18n._('kew-mql')["mql-column"]+' "' + this._column.name + '"');
 
     // Choosing service
-    this._elmts.servicePanelMessage.html("X Pick a service"); // $.i18n._('core-recon')["pick-service"]);
-    this._elmts.serviceListTitle.html("X Services"); // $.i18n._('core-recon')["service-title"]);
-    this._elmts.addServiceButton.html("X Add service"); // $.i18n._('core-buttons')["add-std-svc"]+"...");
+    this._elmts.servicePanelMessage.html($.i18n._('kew-mql')["pick-service"]);
+    this._elmts.serviceListTitle.html($.i18n._('kew-mql')["service-title"]);
+    this._elmts.addServiceButton.html($.i18n._('core-buttons')["add-service"]+"...");
 
     //this._elmts.fb_add_property.html($.i18n._('fb-extend')["add-property"]);
     this._elmts.suggested_properties.text($.i18n._('fb-extend')["suggested-properties"]);
@@ -187,8 +186,8 @@ KewExtendDataPreviewDialog.prototype._onAddService = function() {
 	var dialog = $(DOM.loadHTML("kew-extension", "scripts/dialogs/add-service-dialog.html"));
 	var elmts = DOM.bind(dialog);
 
-	elmts.dialogHeader.html("X Add MQL (Metaweb Query Language) Service"); //$.i18n._('core-recon')["add-std-srv"]);
-	elmts.or_recon_enterName.html("X Enter the service's name:");
+	elmts.dialogHeader.html($.i18n._('kew-mql')["add-mql-srv"]);
+	elmts.or_recon_enterName.html($.i18n._('kew-mql')["enter-name"]+":");
 	elmts.or_recon_enterUrl.html($.i18n._('core-recon')["enter-url"]+":");
 	elmts.addButton.html($.i18n._('core-buttons')["add-service"]);
 	elmts.cancelButton.html($.i18n._('core-buttons')["cancel"]);
@@ -355,7 +354,7 @@ KewExtendDataPreviewDialog.prototype._show = function(properties) {
 };
 
 KewExtendDataPreviewDialog.prototype._update = function() {
-	this._elmts.previewContainer.empty().text("Querying MQL service ...");
+	this._elmts.previewContainer.empty().text($.i18n._('kew-mql')["querying"]);
     
 	console.log(this._serviceRecords[this._selectedServiceRecordIndex]);
 	

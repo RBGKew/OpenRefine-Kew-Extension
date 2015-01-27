@@ -1,0 +1,11 @@
+{
+	"name" : "English",
+	"kew-mql" : {
+		"mql-column": "Use MQL to extend from data in",
+		"pick-service": "Pick a service on the left",
+		"service-title": "Services",
+		"add-mql-srv": "Add MQL (Metaweb Query Language) Service",
+		"enter-name": "Enter the service's name",
+		"querying": "Querying MQL Service..."
+	}
+}

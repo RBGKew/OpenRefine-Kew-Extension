@@ -1,3 +1,21 @@
+// Internationalization init
+var lang = navigator.language.split("-")[0] || navigator.userLanguage.split("-")[0];
+var dictionary = "";
+$.ajax({
+	url : "command/core/load-language?",
+	type : "POST",
+	async : false,
+	data : {
+	  module : "kew-extension",
+//		lang : lang
+	},
+	success : function(data) {
+		dictionary = data;
+	}
+});
+$.i18n.setDictionary(dictionary);
+// End internationalization
+
 DataTableColumnHeaderUI.extendMenu(function(column, columnHeaderUI, menu) {
     var columnIndex = Refine.columnNameToColumnIndex(column.name);
     var doAddColumnFromKew = function() {
