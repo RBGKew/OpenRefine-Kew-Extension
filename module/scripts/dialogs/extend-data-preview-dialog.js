@@ -415,7 +415,7 @@ KewExtendDataPreviewDialog.prototype._renderPreview = function(data) {
     var self = this;
     var container = this._elmts.previewContainer.empty();
     if (data.code == "error") {
-        container.text("Error.");
+        container.text($.i18n._('core-dialogs')["error"]);
         return;
     }
     

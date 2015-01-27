@@ -47,7 +47,7 @@ DataTableColumnHeaderUI.extendMenu(function(column, columnHeaderUI, menu) {
         [ "core/edit-column", "core/add-column-by-fetching-urls" ],
         {
             id: "kew/add-columns-from-kew",
-            label: "Add columns using MQL ...",
+            label: $.i18n._('kew-mql')["mql-menu"],
             click: doAddColumnFromKew
         }
     );
