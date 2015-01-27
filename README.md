@@ -3,7 +3,7 @@
 ## Introduction
 
 This extension is based on the Freebase extension.  It uses [Metaweb Query Language](http://wiki.freebase.com/wiki/MQL)
-(MQL) to query a Kew web service thus incorporating Kew data into another dataset.
+(MQL) to query various Kew web services, thus incorporating Kew data into another dataset.
 
 ## Installation
 

@@ -64,38 +64,63 @@ KewExtendDataPreviewDialog.prototype._createDialog = function() {
     this._elmts.okButton.html('&nbsp;&nbsp;'+$.i18n._('fb-buttons')["ok"]+'&nbsp;&nbsp;');
     this._elmts.cancelButton.text($.i18n._('fb-buttons')["cancel"]);
 
+	this._elmts.servicePanel.hide();
+
     this._elmts.addServiceButton.click(function() { self._onAddService(); });
 
     this._elmts.resetButton.click(function() {
         self._extension.properties = [];
         self._update();
     });
-    
-    this._elmts.okButton.click(function() {
-        if (self._extension.properties.length === 0) {
-            alert($.i18n._('fb-extend')["warning-add-properties"]);
-        } else {
-            DialogSystem.dismissUntil(self._level - 1);
-        	var url = self._serviceRecords[self._selectedServiceRecordIndex].service.url;
-            self._onDone(self._extension, url);
-        }
-    });
-    this._elmts.cancelButton.click(function() {
-        DialogSystem.dismissUntil(self._level - 1);
-    });
-    
+
+    this._elmts.okButton.click(function() { self._onOK(); });
+    this._elmts.cancelButton.click(function() { self._dismiss(); });
+
     this._level = DialogSystem.showDialog(this._dialog);
 
 	this._populateDialog();
+};
+
+KewExtendDataPreviewDialog.prototype._onOK = function() {
+	if (this._extension.properties.length === 0) {
+		alert($.i18n._('fb-extend')["warning-add-properties"]);
+	}
+	else {
+		DialogSystem.dismissUntil(this._level - 1);
+		var url = this._serviceRecords[this._selectedServiceRecordIndex].service.url;
+		this._onDone(this._extension, url);
+	}
+};
+
+KewExtendDataPreviewDialog.prototype._dismiss = function() {
+	this._cleanDialog();
+	DialogSystem.dismissUntil(this._level - 1);
+};
+
+KewExtendDataPreviewDialog.prototype._cleanDialog = function() {
+	for (var i = 0; i < this._serviceRecords.length; i++) {
+		var record = this._serviceRecords[i];
+		if (record.handler) {
+			record.handler.deactivate();
+		}
+		record.selector.remove();
+	}
+	this._serviceRecords = [];
+	this._selectedServiceRecordIndex = -1;
+	this._elmts.servicePanel.hide();
+	this._elmts.servicePanelMessage.show();
+	this._elmts.suggestedPropertyContainer.empty();
+	this._elmts.previewContainer.empty();
 };
 
 KewExtendDataPreviewDialog.prototype._populateDialog = function() {
 	var self = this;
 
 	var services = [
-	                { name: "X The Plant List", url:  "http://www.theplantlist.org/tpl1.1/mql", ui: { handler: "ReconStandardServicePanel" } },
-	                { name: "X IPNI", url:  "http://a9487.ad.kew.org:8080/mql", ui: { handler: "ReconStandardServicePanel" } }
+	                { name: "The Plant List", url:  "http://www.theplantlist.org/tpl1.1/mql", ui: { handler: "ReconStandardServicePanel" } },
+	                { name: "IPNI (A9481)", url:  "http://10.128.129.91:8082/mql", ui: { handler: "ReconStandardServicePanel" } }
 	                ]; // ReconciliationManager.getAllServices();
+	services = KewExtendDataManager.getAllServices();
 	if (services.length > 0) {
 		var renderService = function(service) {
 			var record = {
@@ -109,7 +134,7 @@ KewExtendDataPreviewDialog.prototype._populateDialog = function() {
 			.text(service.name)
 			.appendTo(self._elmts.serviceList)
 			.click(function() {
-				//self._toggleServices();
+				self._toggleServices();
 				self._selectService(record);
 			});
 
@@ -130,28 +155,84 @@ KewExtendDataPreviewDialog.prototype._populateDialog = function() {
 			renderService(services[i]);
 		}
 
-
 		$('.recon-dialog-service-opener').click(function() {
 			self._toggleServices();
 		});
 	}
 };
 
+KewExtendDataPreviewDialog.prototype._toggleServices = function() {
+	var self = this;
+	self._toggleServiceTitle(500);
+	self._toggleServiceList(500);
+};
+
+KewExtendDataPreviewDialog.prototype._toggleServiceTitle = function(duration) {
+	var title = $('.recon-dialog-service-opener-title');
+	title.animate({
+		width : 'toggle'
+	}, duration, 'swing', function() {
+	});
+};
+
+KewExtendDataPreviewDialog.prototype._toggleServiceList = function(duration) {
+	$(".recon-dialog-service-list").toggle("slide", duration);
+};
+
+KewExtendDataPreviewDialog.prototype._refresh = function(newSelectIndex) {
+	this._cleanDialog();
+	this._populateDialog();
+	if (newSelectIndex >= 0) {
+		this._selectService(this._serviceRecords[newSelectIndex]);
+	}
+};
+
+KewExtendDataPreviewDialog.prototype._onAddService = function() {
+	var self = this;
+	var dialog = $(DOM.loadHTML("kew-extension", "scripts/dialogs/add-service-dialog.html"));
+	var elmts = DOM.bind(dialog);
+
+	elmts.dialogHeader.html("X Add MQL (Metaweb Query Language) Service"); //$.i18n._('core-recon')["add-std-srv"]);
+	elmts.or_recon_enterUrl.html($.i18n._('core-recon')["enter-url"]+":");
+	elmts.addButton.html($.i18n._('core-buttons')["add-service"]);
+	elmts.cancelButton.html($.i18n._('core-buttons')["cancel"]);
+
+	var level = DialogSystem.showDialog(dialog);
+	var dismiss = function() {
+		DialogSystem.dismissUntil(level - 1);
+	};
+
+	elmts.cancelButton.click(dismiss);
+	elmts.addButton.click(function() {
+		var url = $.trim(elmts.input[0].value);
+		if (url.length > 0) {
+			ReconciliationManager.registerStandardService(url, function(index) {
+				self._refresh(index);
+			});
+		}
+		dismiss();
+	});
+	elmts.input.focus().select();
+};
+
 KewExtendDataPreviewDialog.prototype._selectService = function(record) {
 	var self = this;
 
+	console.log(record + " selected");
+	
 	for (var i = 0; i < this._serviceRecords.length; i++) {
 		if (record === this._serviceRecords[i]) {
 			if (i !== this._selectedServiceRecordIndex) {
 				if (this._selectedServiceRecordIndex >= 0) {
 					var oldRecord = this._serviceRecords[this._selectedServiceRecordIndex];
+					oldRecord.selector.removeClass("selected");
 					if (oldRecord.handler) {
-						oldRecord.selector.removeClass("selected");
 						oldRecord.handler.deactivate();
 					}
 				}
 
-				//this._elmts.servicePanelMessage.hide();
+				this._elmts.servicePanelMessage.hide();
+				this._elmts.servicePanel.show();
 
 				record.selector.addClass("selected");
 				//if (record.handler) {
@@ -180,10 +261,6 @@ KewExtendDataPreviewDialog.prototype._selectService = function(record) {
 		}
 	}
 };
-
-//KewExtendDataPreviewDialog.getKewMqlUrl = function() {
-//    return "http://www.theplantlist.org/tpl1.1/mql";
-//};
 
 KewExtendDataPreviewDialog.getAllProperties = function(service, typeID, onDone) {
     var done = false;
@@ -238,7 +315,6 @@ KewExtendDataPreviewDialog.prototype._show = function(properties) {
     
     var self = this;
     var container = this._elmts.suggestedPropertyContainer.empty();
-    //container.empty();
     var renderSuggestedProperty = function(property) {
         var label = ("properties" in property) ? (property.name + " &raquo; " + property.properties[0].name) : property.name;
         var div = $('<div>').addClass("suggested-property").appendTo(container);
@@ -278,7 +354,7 @@ KewExtendDataPreviewDialog.prototype._show = function(properties) {
 };
 
 KewExtendDataPreviewDialog.prototype._update = function() {
-	this._elmts.previewContainer.empty().text("Querying Kew ...");
+	this._elmts.previewContainer.empty().text("Querying MQL service ...");
     
 	console.log(this._serviceRecords[this._selectedServiceRecordIndex]);
 	

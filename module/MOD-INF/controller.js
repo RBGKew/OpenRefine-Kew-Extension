@@ -51,6 +51,7 @@ function init() {
 			module,
 			[
 			 "scripts/extension.js",
+			 "scripts/dialogs/extend-data-manager.js",
 			 "scripts/dialogs/extend-data-preview-dialog.js",
 			 ]
 	);
