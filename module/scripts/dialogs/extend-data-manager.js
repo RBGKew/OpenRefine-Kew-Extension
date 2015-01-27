@@ -78,13 +78,12 @@ KewExtendDataManager.registerStandardService = function(url, name, f) {
 		data.name = name ? name : url;
 		data.ui = { "handler" : "X-Unused" };
 
-		index = KewExtendDataManager.customServices.length + 
-		KewExtendDataManager.standardServices.length;
+		index = KewExtendDataManager.customServices.length + KewExtendDataManager.standardServices.length;
 
 		KewExtendDataManager.standardServices.push(data);
 		KewExtendDataManager._rebuildMap();
 
-		//KewExtendDataManager.save();
+		KewExtendDataManager.save();
 
 		//dismissBusy();
 
@@ -98,53 +97,54 @@ KewExtendDataManager.registerStandardService = function(url, name, f) {
 	//});
 };
 
-//KewExtendDataManager.unregisterService = function(service, f) {
-//	for (var i = 0; i < KewExtendDataManager.customServices.length; i++) {
-//		if (KewExtendDataManager.customServices[i] === service) {
-//			KewExtendDataManager.customServices.splice(i, 1);
-//			break;
-//		}
-//	}
-//	for (var i = 0; i < KewExtendDataManager.standardServices.length; i++) {
-//		if (KewExtendDataManager.standardServices[i] === service) {
-//			KewExtendDataManager.standardServices.splice(i, 1);
-//			break;
-//		}
-//	}
-//	KewExtendDataManager._rebuildMap();
-//	KewExtendDataManager.save(f);
-//};
+KewExtendDataManager.unregisterService = function(service, f) {
+	for (var i = 0; i < KewExtendDataManager.customServices.length; i++) {
+		if (KewExtendDataManager.customServices[i] === service) {
+			KewExtendDataManager.customServices.splice(i, 1);
+			break;
+		}
+	}
+	for (var i = 0; i < KewExtendDataManager.standardServices.length; i++) {
+		if (KewExtendDataManager.standardServices[i] === service) {
+			KewExtendDataManager.standardServices.splice(i, 1);
+			break;
+		}
+	}
+	KewExtendDataManager._rebuildMap();
+	KewExtendDataManager.save(f);
+};
 
-//KewExtendDataManager.save = function(f) {
-//	$.ajax({
-//		async: false,
-//		type: "POST",
-//		url: "command/core/set-preference?" + $.param({ 
-//			name: "reconciliation.standardServices" 
-//		}),
-//		data: { "value" : JSON.stringify(KewExtendDataManager.standardServices) },
-//		success: function(data) {
-//			if (f) { f(); }
-//		},
-//		dataType: "json"
-//	});
-//};
+KewExtendDataManager.save = function(f) {
+	$.ajax({
+		async: false,
+		type: "POST",
+		url: "command/core/set-preference?" + $.param({
+			name: "kew.mqlServices"
+		}),
+		data: { "value" : JSON.stringify(KewExtendDataManager.standardServices) },
+		success: function(data) {
+			if (f) { f(); }
+		},
+		dataType: "json"
+	});
+};
 
 (function() {
-	//$.ajax({
-	//	async: false,
-	//	url: "command/core/get-preference?" + $.param({ 
-	//		name: "reconciliation.standardServices" 
-	//	}),
-	//	success: function(data) {
-	//		if (data.value && data.value != "null") {
-	//			KewExtendDataManager.standardServices = JSON.parse(data.value);
-	//			KewExtendDataManager._rebuildMap();
-	//		} else {
+	$.ajax({
+		async: false,
+		url: "command/core/get-preference?" + $.param({
+			name: "kew.mqlServices"
+		}),
+		success: function(data) {
+			if (data.value && data.value != "null") {
+				KewExtendDataManager.standardServices = JSON.parse(data.value);
+				KewExtendDataManager._rebuildMap();
+			}
+			else {
 				KewExtendDataManager.registerStandardService("http://www.theplantlist.org/tpl1.1/mql", "The Plant List");
-				KewExtendDataManager.registerStandardService("http://10.128.129.91:8082/mql", "IPNI (A9481)");
-	//		}
-	//	},
-	//	dataType: "json"
-	//});
+				//KewExtendDataManager.registerStandardService("http://10.128.129.91:8082/mql", "IPNI (A9481)");
+			}
+		},
+		dataType: "json"
+	});
 })();

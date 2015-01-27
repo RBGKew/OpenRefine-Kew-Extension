@@ -116,11 +116,7 @@ KewExtendDataPreviewDialog.prototype._cleanDialog = function() {
 KewExtendDataPreviewDialog.prototype._populateDialog = function() {
 	var self = this;
 
-	var services = [
-	                { name: "The Plant List", url:  "http://www.theplantlist.org/tpl1.1/mql", ui: { handler: "ReconStandardServicePanel" } },
-	                { name: "IPNI (A9481)", url:  "http://10.128.129.91:8082/mql", ui: { handler: "ReconStandardServicePanel" } }
-	                ]; // ReconciliationManager.getAllServices();
-	services = KewExtendDataManager.getAllServices();
+	var services = KewExtendDataManager.getAllServices();
 	if (services.length > 0) {
 		var renderService = function(service) {
 			var record = {
@@ -143,7 +139,7 @@ KewExtendDataPreviewDialog.prototype._populateDialog = function() {
 			.addClass("recon-dialog-service-selector-remove")
 			.prependTo(record.selector)
 			.click(function() {
-				ReconciliationManager.unregisterService(service, function() {
+				KewExtendDataManager.unregisterService(service, function() {
 					self._refresh(-1);
 				});
 			});
@@ -193,6 +189,7 @@ KewExtendDataPreviewDialog.prototype._onAddService = function() {
 	var elmts = DOM.bind(dialog);
 
 	elmts.dialogHeader.html("X Add MQL (Metaweb Query Language) Service"); //$.i18n._('core-recon')["add-std-srv"]);
+	elmts.or_recon_enterName.html("X Enter the service's name:");
 	elmts.or_recon_enterUrl.html($.i18n._('core-recon')["enter-url"]+":");
 	elmts.addButton.html($.i18n._('core-buttons')["add-service"]);
 	elmts.cancelButton.html($.i18n._('core-buttons')["cancel"]);
@@ -204,15 +201,19 @@ KewExtendDataPreviewDialog.prototype._onAddService = function() {
 
 	elmts.cancelButton.click(dismiss);
 	elmts.addButton.click(function() {
-		var url = $.trim(elmts.input[0].value);
+		var name = $.trim(elmts.inputName.val());
+		var url = $.trim(elmts.inputUrl.val());
 		if (url.length > 0) {
-			ReconciliationManager.registerStandardService(url, function(index) {
+			if (name.length == 0) {
+				name = url;
+			}
+			KewExtendDataManager.registerStandardService(url, name, function(index) {
 				self._refresh(index);
 			});
 		}
 		dismiss();
 	});
-	elmts.input.focus().select();
+	elmts.inputName.focus().select();
 };
 
 KewExtendDataPreviewDialog.prototype._selectService = function(record) {
