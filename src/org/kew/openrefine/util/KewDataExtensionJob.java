@@ -57,10 +57,17 @@ import com.google.refine.util.ParsingUtilities;
 
 public class KewDataExtensionJob extends FreebaseDataExtensionJob {
     
-    private static String kewMqlUrl;
+    final String mqlUrl;
+    final String reconServiceUrl;
+    final String identifierSpace;
+    final String schemaSpace;
 
-    public KewDataExtensionJob(JSONObject obj) throws JSONException {
+    public KewDataExtensionJob(JSONObject obj, String mqlUrl, String reconServiceUrl, String identifierSpace, String schemaSpace) throws JSONException {
         super(obj);
+        this.mqlUrl = mqlUrl;
+        this.reconServiceUrl = reconServiceUrl;
+        this.identifierSpace = identifierSpace;
+        this.schemaSpace = schemaSpace;
     }
 
     @Override
@@ -94,13 +101,13 @@ public class KewDataExtensionJob extends FreebaseDataExtensionJob {
             return map;
         } 
 
-    static protected String doMqlRead(String query) throws IOException {
+    protected String doMqlRead(String query) throws IOException {
         // Kew-MQL-specific
-        if (kewMqlUrl == null) {
+        if (mqlUrl == null) {
             throw new IOException("No Kew MQL URL defined");
         }
         
-        URL url = new URL(kewMqlUrl + "/read");
+        URL url = new URL(mqlUrl + "/read");
 
         System.out.println("Kew MQL url: " + url.toString());
         System.out.println("Kew MQL query: " + query);
@@ -126,9 +133,5 @@ public class KewDataExtensionJob extends FreebaseDataExtensionJob {
         System.out.println("Kew MQL response: " + s);
         connection.getInputStream().close();
         return s;
-    }
-
-    public void setKewMqlUrl(String kewMqlUrl) {
-        KewDataExtensionJob.kewMqlUrl = kewMqlUrl;
     }
 }

@@ -45,13 +45,15 @@ import org.apache.commons.lang.StringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONWriter;
+import org.kew.openrefine.model.changes.KewDataExtensionChange;
 import org.kew.openrefine.util.KewDataExtensionJob;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.refine.browsing.Engine;
 import com.google.refine.browsing.FilteredRows;
 import com.google.refine.browsing.RowVisitor;
 import com.google.refine.freebase.FreebaseType;
-import com.google.refine.freebase.model.changes.DataExtensionChange;
 import com.google.refine.freebase.util.FreebaseDataExtensionJob.ColumnInfo;
 import com.google.refine.freebase.util.FreebaseDataExtensionJob.DataExtension;
 import com.google.refine.history.HistoryEntry;
@@ -68,6 +70,8 @@ import com.google.refine.process.LongRunningProcess;
 import com.google.refine.process.Process;
 
 public class KewExtendDataOperation extends EngineDependentOperation {
+    static final Logger logger = LoggerFactory.getLogger("kew-extension");
+
     final protected String     _baseColumnName;
     final protected JSONObject _extension;
     final protected int        _columnInsertIndex;
@@ -153,8 +157,7 @@ public class KewExtendDataOperation extends EngineDependentOperation {
             _engineConfig = engineConfig;
             _historyEntryID = HistoryEntry.allocateID();
             
-            _job = new KewDataExtensionJob(_extension);
-            _job.setKewMqlUrl(_kewMqlUrl);
+            _job = new KewDataExtensionJob(_extension, _kewMqlUrl, "http://data1.kew.org/reconciliation/reconcile/IpniName", "", "");
         }
         
         @Override
@@ -178,6 +181,7 @@ public class KewExtendDataOperation extends EngineDependentOperation {
         protected void populateRowsWithMatches(List<Integer> rowIndices) throws Exception {
             Engine engine = new Engine(_project);
             engine.initializeFromJSON(_engineConfig);
+            logger.info("engineConfig {}", _engineConfig);
             
             Column column = _project.columnModel.getColumnByName(_baseColumnName);
             if (column == null) {
@@ -207,8 +211,10 @@ public class KewExtendDataOperation extends EngineDependentOperation {
                 
                 @Override
                 public boolean visit(Project project, int rowIndex, Row row) {
+                    logger.debug("Visiting {}, {}, {}", new Object[] {project, rowIndex, row});
                     Cell cell = row.getCell(_cellIndex);
                     if (cell != null && cell.recon != null && cell.recon.match != null) {
+                        logger.debug("Visiting2 {}, {}, {}, {}", new Object[] {cell, cell.recon.match, _rowIndices, rowIndex});
                         _rowIndices.add(rowIndex);
                     }
                     
@@ -227,11 +233,14 @@ public class KewExtendDataOperation extends EngineDependentOperation {
             Set<String> ids = new HashSet<String>();
             
             int end;
+            // Adds the identifier to the cell
             for (end = from; end < limit && ids.size() < 10; end++) {
                 int index = rowIndices.get(end);
                 Row row = _project.rows.get(index);
                 Cell cell = row.getCell(_cellIndex);
                 
+                logger.debug("extending {}, {}, {}, {}", new Object[] {index, row, cell, cell.recon.match.id});
+
                 ids.add(cell.recon.match.id);
             }
             
@@ -242,6 +251,8 @@ public class KewExtendDataOperation extends EngineDependentOperation {
                 map = new HashMap<String, DataExtension>();
             }
             
+            logger.debug("map {}", new Object[] {map});
+
             for (int i = from; i < end; i++) {
                 int index = rowIndices.get(i);
                 Row row = _project.rows.get(index);
@@ -253,8 +264,11 @@ public class KewExtendDataOperation extends EngineDependentOperation {
                 } else {
                     dataExtensions.add(null);
                 }
+                logger.debug("thing2 {}, {}, {}, {}, {}", new Object[] {index, row, cell, guid, map.get(guid)});
+
             }
             
+            logger.info("Data extensions {}", dataExtensions);
             return end;
         }
         
@@ -262,6 +276,7 @@ public class KewExtendDataOperation extends EngineDependentOperation {
         public void run() {
             List<Integer> rowIndices = new ArrayList<Integer>();
             List<DataExtension> dataExtensions = new ArrayList<DataExtension>();
+            
             
             try {
                 populateRowsWithMatches(rowIndices);
@@ -277,6 +292,8 @@ public class KewExtendDataOperation extends EngineDependentOperation {
                 int end = extendRows(rowIndices, dataExtensions, start, rowIndices.size(), reconCandidateMap);
                 start = end;
                 
+                logger.info("reconCandidateMap {}", reconCandidateMap);
+
                 _progress = end * 100 / rowIndices.size();
                 try {
                     Thread.sleep(200);
@@ -292,29 +309,43 @@ public class KewExtendDataOperation extends EngineDependentOperation {
                 for (ColumnInfo info : _job.columns) {
                     columnNames.add(StringUtils.join(info.names, " - "));
                 }
+                logger.info("columnNames {}", columnNames);
                 
                 List<FreebaseType> columnTypes = new ArrayList<FreebaseType>();
                 for (ColumnInfo info : _job.columns) {
                     columnTypes.add(info.expectedType);
                 }
+                logger.info("columnTypes {}", columnTypes);
+                
+                String reconServiceUrl = "http://data1.kew.org/reconciliation/reconcile/IpniName";
+                String identifierSpace = "";
+                String schemaSpace = "";
                 
                 HistoryEntry historyEntry = new HistoryEntry(
                     _historyEntryID,
                     _project, 
                     _description, 
                     KewExtendDataOperation.this, 
-                    new DataExtensionChange(
+                    new KewDataExtensionChange(
                         _baseColumnName,
                         _columnInsertIndex,
                         columnNames,
                         columnTypes,
                         rowIndices,
                         dataExtensions,
+                        reconServiceUrl,
+                        identifierSpace,
+                        schemaSpace,
                         _historyEntryID)
                 );
                 
+                logger.info("HistoryEntry {}", historyEntry);
+                logger.info("Stack {}", new Exception("make stack"));
+                
                 _project.history.addEntry(historyEntry);
+                logger.info("added history");
                 _project.processManager.onDoneProcess(this);
+                logger.info("done process");
             }
         }
     }

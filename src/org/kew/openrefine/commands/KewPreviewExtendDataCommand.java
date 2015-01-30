@@ -71,6 +71,7 @@ public class KewPreviewExtendDataCommand extends Command {
         try {
             Project project = getProject(request);
             String kewMqlUrl = request.getParameter("kewMqlUrl");
+            logger.debug("mqlUrl is {}", kewMqlUrl);
             String columnName = request.getParameter("columnName");
             
             String rowIndicesString = request.getParameter("rowIndices");
@@ -107,8 +108,7 @@ public class KewPreviewExtendDataCommand extends Command {
             }
             
             Map<String, ReconCandidate> reconCandidateMap = new HashMap<String, ReconCandidate>();
-            KewDataExtensionJob job = new KewDataExtensionJob(json);
-            job.setKewMqlUrl(kewMqlUrl);
+            KewDataExtensionJob job = new KewDataExtensionJob(json, kewMqlUrl, null, null, null);
             Map<String, DataExtension> map = job.extend(ids, reconCandidateMap);
             
             response.setCharacterEncoding("UTF-8");
